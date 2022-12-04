@@ -1,7 +1,7 @@
-﻿Console.WriteLine(NextChunk().Count(c => (c[0] >= c[2] && c[1] <= c[3]) || (c[2] >= c[0] && c[3] <= c[1])));
-Console.WriteLine(NextChunk().Count(c => (c[0] >= c[2] && c[0] <= c[3]) || (c[0] <= c[2] && c[2] <= c[1])));
+﻿Console.WriteLine(LineValues().Count(v => (v[0] >= v[2] && v[1] <= v[3]) || (v[2] >= v[0] && v[3] <= v[1])));
+Console.WriteLine(LineValues().Count(v => (v[0] >= v[2] && v[0] <= v[3]) || (v[0] <= v[2] && v[2] <= v[1])));
 
-static IEnumerable<int[]> NextChunk() => File.ReadLines("Input.txt")
+static IEnumerable<int[]> LineValues() => File.ReadLines("Input.txt")
 	.SelectMany(line => line.Split(',')
 	.SelectMany(half => half.Split('-'))
 	.Select(x => int.Parse(x))
