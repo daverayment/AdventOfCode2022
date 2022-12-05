@@ -7,6 +7,7 @@ DoMoves(true);
 
 void DoMoves(bool isDayTwo = false)
 {
+	// Starting position for the crates.
 	var stacks = new Stack<char>[9];
 	foreach (string line in _lines.Take(8).Reverse())
 	{
@@ -25,30 +26,21 @@ void DoMoves(bool isDayTwo = false)
 		}
 	}
 
+	// Execute the moves.
 	foreach (string line in _lines.Skip(10))
 	{
-		var buffer = new Stack<char>();
+		//var buffer = new Stack<char>();
+		string buffer = string.Empty;
 		int[] parts = Regex.Matches(line, @"\d+").Select(x => int.Parse(x.Value)).ToArray();
 
 		while (parts[0]-- > 0)
 		{
-			char c = stacks[parts[1] - 1].Pop();
-			if (isDayTwo)
-			{
-				buffer.Push(c);
-			}
-			else
-			{
-				stacks[parts[2] - 1].Push(c);
-			}
+			buffer += stacks[parts[1] - 1].Pop();
 		}
 
-		if (isDayTwo)
+		foreach (char c in isDayTwo ? buffer.Reverse() : buffer)
 		{
-			foreach (char c in buffer)
-			{
-				stacks[parts[2] - 1].Push(c);
-			}
+			stacks[parts[2] - 1].Push(c);
 		}
 	}
 
