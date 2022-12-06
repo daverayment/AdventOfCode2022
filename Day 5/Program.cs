@@ -29,7 +29,6 @@ void DoMoves(bool isDayTwo = false)
 	// Execute the moves.
 	foreach (string line in _lines.Skip(10))
 	{
-		//var buffer = new Stack<char>();
 		string buffer = string.Empty;
 		int[] parts = Regex.Matches(line, @"\d+").Select(x => int.Parse(x.Value)).ToArray();
 
@@ -44,6 +43,7 @@ void DoMoves(bool isDayTwo = false)
 		}
 	}
 
+	// Output the top of the stacks.
 	foreach (var stack in stacks)
 	{
 		Console.Write(stack.Pop());
