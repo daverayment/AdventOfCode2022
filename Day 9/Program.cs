@@ -38,9 +38,9 @@ void DoMoves(int numKnots)
 				}
 			}
 
-			if (!visited.Contains(knots[numKnots-1]))
+			if (!visited.Contains(knots[numKnots - 1]))
 			{
-				visited.Add(knots[numKnots-1]);
+				visited.Add(knots[numKnots - 1]);
 			}
 		}
 	}
