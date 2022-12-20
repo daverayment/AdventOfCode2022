@@ -1,11 +1,7 @@
-﻿List<List<Coord>> allCoords = new();
-
-foreach (string line in File.ReadLines("Example.txt"))
-{
-	allCoords.Add(line.Split(" -> ").Select(x => x.Split(',')).ToArray()
-		.Select(coord => new Coord(int.Parse(coord[0]), int.Parse(coord[1])))
-		.ToList());
-}
+﻿var allCoords = File.ReadLines("Example.txt")
+	.Select(line => line.Split(" -> ")
+		.Select(x => x.Split(',')).ToArray()
+		.Select(coord => new Coord(int.Parse(coord[0]), int.Parse(coord[1]))).ToList());
 
 var coordEnum = allCoords.SelectMany(list => list.Select(coord => coord));
 Coord min = new(coordEnum.Min(xy => xy.X), 0);
@@ -17,7 +13,7 @@ foreach (var list in allCoords)
 	Coord last = list[0];
 	for (int i = 1; i < list.Count; i++)
 	{
-		DrawLine(grid, last, list[i]);
+		DrawLine(last, list[i]);
 		last = list[i];
 	}
 }
@@ -25,7 +21,7 @@ foreach (var list in allCoords)
 DrawGrid();
 Console.WriteLine("");
 
-void DrawLine(char[,] grid, Coord last, Coord next)
+void DrawLine(Coord last, Coord next)
 {
 	int dx = next.X - last.X;
 	int dy = next.Y - last.Y;
