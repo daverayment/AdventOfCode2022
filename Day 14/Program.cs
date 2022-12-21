@@ -15,7 +15,6 @@ char[,] grid;
 
 Console.WriteLine(Simulate());
 Console.WriteLine(Simulate(true) + 1);
-Console.WriteLine("");
 
 int Simulate(bool isDayTwo = false)
 {
@@ -25,7 +24,7 @@ int Simulate(bool isDayTwo = false)
 	{
 		sandCount++;
 	}
-	DrawGrid();
+	//DrawGrid();
 	return sandCount;
 }
 
@@ -66,20 +65,15 @@ bool IsSandInBounds(bool isDayTwo)
 	}
 }
 
-bool InBounds((int x, int y) xy, bool isDayTwo)
-{
-	return isDayTwo ? true : xy.y < grid.GetLength(1);
-	//return xy.x >= 0 && xy.x < grid.GetLength(0) && xy.y < grid.GetLength(1);
-}
-
 (int X, int Y) GetMove((int X, int Y) sand, bool isDayTwo)
 {
 	foreach ((int dx, int dy) move in validMoves)
 	{
 		int newX = sand.X + move.dx;
 		int newY = sand.Y + move.dy;
-		if (!InBounds((newX, newY), isDayTwo))
+		if (!isDayTwo && newY >= grid.GetLength(1))
 		{
+			// Out of bounds.
 			return (-1, -1);
 		}
 		// Take into account the infinite floor for day 2.
@@ -89,8 +83,7 @@ bool InBounds((int x, int y) xy, bool isDayTwo)
 			return move;
 		}
 	}
-
-	return (0, 0);
+	throw new Exception("Error");
 }
 
 void DrawLine(Coord last, Coord next)
