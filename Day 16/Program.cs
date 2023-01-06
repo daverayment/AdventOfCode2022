@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 var caves = File.ReadLines("Input.txt")
 	.Select(line => Regex.Matches(line, @"(\d+|[A-Z]{2})"))
@@ -16,61 +15,76 @@ var distances =
 	 from end in caves.Values
 	 where (start.Name == "AA" || (start.Flow > 0 && end.Flow > 0)) &&
 		start.Name != end.Name
-	 select new { Caves = (start.Name, end.Name), Distance = CalcDistance(start.Name, end.Name) }
+	 select new { Caves = (Start: start.Name, End: end.Name), Distance = CalcDistance(start.Name, end.Name) }
 	).ToDictionary(x => x.Caves, x => x.Distance);
 
-var watch = Stopwatch.StartNew();
+// Create a unique index for each of the caves with flows > 0. Uses a single bit
+// for each valve so we can do calculations on the bits in Day 2.
+Dictionary<string, int> valveIndexes = caves.Where(x => x.Value.Flow > 0)
+	.Select((x, index) => new { x.Value.Name, index })
+	.ToDictionary(x => x.Name, x => 1 << x.index);
+// The maximum pressure released for each combination of valve visits.
+Dictionary<int, int> valveStates = new();
+
+// Day 1.
 Console.WriteLine(Search());
-Console.WriteLine(watch.ElapsedMilliseconds);
+// Day 2.
+Search(true);
+Console.WriteLine((from a in valveStates
+				   from b in valveStates
+				   where (a.Key & b.Key) == 0
+				   select a.Value + b.Value).Max());
 
-int Search()
+int Search(bool isDayTwo = false)
 {
-	Stack<State> states = new();
-	states.Push(new State
-	{
-		CurrentCave = "AA",
-		CavesLeft = caves.Where(x => x.Value.Flow > 0).OrderByDescending(x => x.Value.Flow).Select(x => x.Key).ToArray(),
-		FlowRate = 0,
-		Pressure = 0,
-		TimeLeft = 30
-	});
-
+	valveStates.Clear();
 	int maxPressure = 0;
-	int numStates = 0;
+	Stack<State> states = new();
+	states.Push(new State(
+		CurrentCave: "AA",
+		TimeLeft:    isDayTwo ? 26 : 30,
+		OpenValves:  0,
+		CavesLeft:   caves.Where(x => x.Value.Flow > 0).OrderByDescending(x => x.Value.Flow).Select(x => x.Key).ToArray(),
+		Pressure:    0,
+		FlowRate:    0));
 
 	do
 	{
 		var current = states.Pop();
-		numStates++;
+
+		// The pressure released if we stayed here until time runs out.
+		int stopScore = current.Pressure + current.TimeLeft * current.FlowRate;
+
+		// Update the score for this combination of valves if the route is better.
+		if (!valveStates.ContainsKey(current.OpenValves) ||
+			stopScore > valveStates[current.OpenValves])
+		{
+			valveStates[current.OpenValves] = stopScore;
+		}
 
 		if (current.TimeLeft == 0 || !current.CavesLeft.Any())
 		{
-			maxPressure = Math.Max(maxPressure,
-				current.Pressure + current.TimeLeft * current.FlowRate);
+			maxPressure = Math.Max(maxPressure, stopScore);
 		}
 		else
 		{
 			// Add states to move to each cave in turn and open the valve there.
 			foreach (var cave in current.CavesLeft)
 			{
-				int moveTime = distances[(current.CurrentCave, cave)] + 1;
-				moveTime = Math.Min(moveTime, current.TimeLeft);
+				int moveTime = Math.Min(current.TimeLeft,
+					distances[(current.CurrentCave, cave)] + 1);
 
-				int newPressure = current.Pressure + current.FlowRate * moveTime;
-
-				states.Push(new State
-				{
-					CurrentCave = cave,
-					CavesLeft = current.CavesLeft.Where(x => x != cave).ToArray(),
-					FlowRate = current.FlowRate + caves[cave].Flow,
-					Pressure = newPressure,
-					TimeLeft = current.TimeLeft - moveTime
-				});
+				states.Push(new State(
+					CurrentCave: cave,
+					TimeLeft:	 current.TimeLeft - moveTime,
+					OpenValves:	 current.OpenValves | valveIndexes[cave],
+					CavesLeft:	 current.CavesLeft.Where(x => x != cave).ToArray(),
+					Pressure:	 current.Pressure + current.FlowRate * moveTime,
+					FlowRate:	 current.FlowRate + caves[cave].Flow));
 			}
 		}
 	} while (states.Count > 0);
 
-	Console.WriteLine(numStates);
 	return maxPressure;
 }
 
@@ -100,11 +114,5 @@ int CalcDistance(string start, string end)
 	return int.MaxValue;
 }
 
-struct State
-{
-	public string CurrentCave;
-	public int TimeLeft;
-	public string[] CavesLeft;
-	public int Pressure;
-	public int FlowRate;
-}
+record State(string CurrentCave, int TimeLeft, int OpenValves,
+	string[] CavesLeft, int Pressure, int FlowRate);
